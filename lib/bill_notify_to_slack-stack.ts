@@ -27,7 +27,7 @@ export class BillNotifyToSlackStack extends cdk.Stack {
       ],
     });
 
-    //   aws ssm put-parameter \                                                                                                           [~/Desktop/program/aws-cdk/billNotifyToSlack]
+    //   aws ssm put-parameter \
     //  --type 'String' \
     //  --name '/Lambda/production/aws_bill_webhook' \
     //  --value 'hook-url'
