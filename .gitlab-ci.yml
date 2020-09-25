@@ -54,6 +54,7 @@ DeployDev:
       - bundle/nodejs/node_modules
       - node_modules
   script:
+    - ls
     - echo "---- Deploy ----"
     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
