@@ -1,4 +1,4 @@
-# image: node:alpine
+image: node:alpine
 
 stages:
   - unitTest
@@ -26,6 +26,8 @@ Build:
   before_script:
     - npm i -g webpack ts-loader webpack-node-externals
   script:
+    - echo "---- Layer Install ----"
+    - node lib/process/setup.ts
     - echo "---- Build ----"
     - npm run build
 
