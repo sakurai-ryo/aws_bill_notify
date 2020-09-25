@@ -38,7 +38,7 @@ Build:
     - npm run build
 
 DeployDev:
-  stage: deploy
+  stage: deployDev
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
       when: always
@@ -53,7 +53,7 @@ DeployDev:
     - cdk deploy SYSTEM_ENV=dev # 環境変数で環境を分岐させる
 
 DeployPro:
-  stage: deploy
+  stage: deployPro
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
       when: manual # 本番環境へのデプロイは手動実行にする
