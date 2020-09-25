@@ -11,9 +11,10 @@ Test:
   cache:
     paths:
       - node_modules
+  when: always
   before_script:
     - ls
-    - npm i
+    - npm i -g aws-cdk
   script:
     - ls
     - echo "---- Unit Test ----"
@@ -32,8 +33,7 @@ Build:
       - node_modules
   script:
     - echo "---- Layer Install ----"
-    - npm i -g ts-node
-    - ts-node lib/process/setup.ts
+    - npx ts-node lib/process/setup.ts
     - echo "---- Build ----"
     - npm run build
 
@@ -50,7 +50,7 @@ DeployDev:
       - node_modules
   script:
     - echo "---- Deploy ----"
-    - cdk deploy SYSTEM_ENV=dev # 環境変数で環境を分岐させる
+    - npx cdk deploy SYSTEM_ENV=dev # 環境変数で環境を分岐させる
 
 DeployPro:
   stage: deployPro
@@ -62,4 +62,4 @@ DeployPro:
       - node_modules
   script:
     - echo "---- Deploy ----"
-    - cdk deploy SYSTEM_ENV=pro
+    - npx cdk deploy SYSTEM_ENV=pro
