@@ -3,10 +3,13 @@
 !webpack.config.js
 *.d.ts
 node_modules
-
+bundle/
 # CDK asset staging directory
 .cdk.staging
 cdk.out
 
 # Parcel default cache directory
 .parcel-cache
+
+# webpack
+dist/

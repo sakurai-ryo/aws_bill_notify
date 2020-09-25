@@ -24,15 +24,14 @@ Build:
   stage: build
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"' #'$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' masterへのcommitの場合 $CI_COMMIT_BRANCH
-      when: always
-    - when: on_success
+      when: on_success # testが通った時のみ実行する
   cache:
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
   script:
     - echo "---- Layer Install ----"
-    - npx ts-node lib/process/setup.ts # package.jsonのdependenciesのみをインストール
+    - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
     - echo "---- Build ----"
     - npm run build
 
