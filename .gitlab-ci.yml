@@ -11,10 +11,14 @@ Test:
   cache:
     paths:
       - node_modules
-  when: always
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' # merge requestがmasterへのものだった場合
+      when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
+    - if: "$VAR =~ /pattern/"
+      when: manual # ジョブを手動で実行
+    - when: on_success # 直前のジョブが全て成功した場合にのみジョブが実行
   before_script:
-    - ls
-    - npm i -g aws-cdk
+    - npm i g jest ts-jest
   script:
     - ls
     - echo "---- Unit Test ----"
@@ -23,11 +27,11 @@ Test:
 Build:
   stage: build
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' # masterにpushされている場合のみ
-      when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
+    - if: '$CI_COMMIT_BRANCH == "master"' #'$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' masterへのcommitの場合 $CI_COMMIT_BRANCH
+      when: always
     - if: "$VAR =~ /pattern/"
-      when: manual # ジョブを手動で実行
-    - when: on_success # 直前のジョブが全て成功した場合にのみジョブが実行
+      when: manual
+    - when: on_success
   cache:
     paths:
       - node_modules
@@ -40,7 +44,7 @@ Build:
 DeployDev:
   stage: deployDev
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
       when: always
     - if: "$VAR =~ /pattern/"
       when: manual
@@ -55,7 +59,7 @@ DeployDev:
 DeployPro:
   stage: deployPro
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual # 本番環境へのデプロイは手動実行にする
   cache:
     paths:
