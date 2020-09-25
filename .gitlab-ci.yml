@@ -25,7 +25,7 @@ Build:
   stage: build
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-      when: always
+      when: on_success
     # - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
     #   when: on_success # testが通った時のみ実行する
   cache:
@@ -33,6 +33,7 @@ Build:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
   script:
+    - npm i
     - echo "---- Layer Install ----"
     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
     - echo "---- Build ----"
@@ -43,7 +44,7 @@ DeployDev:
   stage: deployDev
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-      when: always
+      when: on_success
     # - if: '$CI_COMMIT_BRANCH == "master"'
     #   when: on_success # test & buildが成功した時のみ
   cache:
