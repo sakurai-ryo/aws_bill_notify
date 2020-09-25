@@ -12,6 +12,7 @@ stages:
 Test:
   stage: unitTest
   before_script:
+    - ls
     - npm i -g jest aws-cdk
   script:
     - ls
