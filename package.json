@@ -5,7 +5,7 @@
     "bill_notify_to_slack": "bin/bill_notify_to_slack.js"
   },
   "scripts": {
-    "build": "webpack",
+    "build": "webpack --config webpack.config.js",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
