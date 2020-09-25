@@ -24,8 +24,10 @@ Test:
 Build:
   stage: build
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"' #'$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' masterへのcommitの場合 $CI_COMMIT_BRANCH
-      when: on_success # testが通った時のみ実行する
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: always
+    # - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
+    #   when: on_success # testが通った時のみ実行する
   cache:
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
@@ -40,8 +42,10 @@ Build:
 DeployDev:
   stage: deployDev
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: on_success
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: always
+    # - if: '$CI_COMMIT_BRANCH == "master"'
+    #   when: on_success # test & buildが成功した時のみ
   cache:
     paths:
       - bundle/nodejs/node_modules
