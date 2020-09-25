@@ -7,11 +7,13 @@ stages:
   - deployDev
   - deployPro
 
+include: # 重複しないため
+  - template: "Workflows/MergeRequest-Pipelines.gitlab-ci.yml"
+
 Test:
   stage: unitTest
-  workflow: # 重複を防ぐため
-    rules: #if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
-      - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
+  rules: #if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
+    - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
   cache:
     paths:
       - node_modules
