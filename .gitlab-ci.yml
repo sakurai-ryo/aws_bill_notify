@@ -15,8 +15,7 @@ Test:
       - node_modules
   before_script:
     - npm i --progress=false # テストに必要なモジュールのインストール
-    - mkdir bundle
-    - mkdir bundle/nodejs
+    - mkdir bundle bundle/nodejs dist dist/handler
     - ls
   script:
     - echo "---- Unit Test ----"
