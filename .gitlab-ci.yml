@@ -12,13 +12,13 @@ Test:
     paths:
       - node_modules
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' # merge requestがmasterへのものだった場合
+    - if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
       when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
-    - if: "$VAR =~ /pattern/"
-      when: manual # ジョブを手動で実行
-    - when: on_success # 直前のジョブが全て成功した場合にのみジョブが実行
-  before_script:
-    - npm i g jest ts-jest
+    # - if: "$VAR =~ /pattern/"
+    #   when: manual # ジョブを手動で実行
+    # - when: on_success # 直前のジョブが全て成功した場合にのみジョブが実行
+  # before_script:
+  #   - npm i -g jest ts-jest
   script:
     - ls
     - echo "---- Unit Test ----"
@@ -54,7 +54,7 @@ DeployDev:
       - node_modules
   script:
     - echo "---- Deploy ----"
-    - npx cdk deploy SYSTEM_ENV=dev # 環境変数で環境を分岐させる
+    - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
 DeployPro:
   stage: deployPro
@@ -66,4 +66,4 @@ DeployPro:
       - node_modules
   script:
     - echo "---- Deploy ----"
-    - npx cdk deploy SYSTEM_ENV=pro
+    - SYSTEM_ENV=pro npm run deploy
