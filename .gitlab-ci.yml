@@ -1,21 +1,21 @@
-stage:
+stages:
   - unitTest
   - build
   - deploy
 
 Test:
   stage: unitTest
-  script: 
+  script:
     - npm run test # jest
   only: # masterにpushされた時のみにする
     - pushes
 
 Build:
   stage: build
-  script: 
+  script:
     - npm run build
 
 Deploy:
   stage: deploy
-  script: 
+  script:
     - cdk deploy
