@@ -8,9 +8,8 @@ stages:
 
 Test:
   stage: unitTest
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
-      when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
+  rules: #if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
+    - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
   cache:
     paths:
       - node_modules
