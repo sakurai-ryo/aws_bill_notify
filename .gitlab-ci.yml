@@ -32,8 +32,8 @@ Build:
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
-  before_script:
-    - apk add bash
+  # before_script:
+  #   - apk add bash
   script:
     - echo "---- Layer Install ----"
     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
