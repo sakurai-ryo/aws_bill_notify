@@ -1,21 +1,37 @@
+image: node:alpine
+
 stages:
   - unitTest
   - build
   - deploy
 
+cache:
+  paths:
+    - node_modules
+
 Test:
   stage: unitTest
+  only: ["pushes"]
+  before_script:
+    - npm i -g jest ts-jest webpack-node-externals
   script:
+    - echo "---- Unit Test ----"
     - npm run test # jest
-  only: # masterにpushされた時のみにする
-    - pushes
 
 Build:
   stage: build
+  only: ["pushes"]
+  before_script:
+    - npm i -g webpack ts-loader
   script:
+    - echo "---- Build ----"
     - npm run build
 
 Deploy:
   stage: deploy
+  only: ["pushes"]
+  before_script:
+    - npm i -g aws-cdk
   script:
+    - echo "---- Deploy ----"
     - cdk deploy
