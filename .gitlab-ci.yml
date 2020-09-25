@@ -5,12 +5,11 @@ stages:
   - build
   - deploy
 
-# cache:
-#   paths:
-#     - node_modules
-
 Test:
   stage: unitTest
+  cache:
+    paths:
+      - node_modules
   before_script:
     - ls
     - npm i
@@ -23,11 +22,12 @@ Build:
   stage: build
   # only:
   #   - master
-  # before_script:
-  #   - npm i -g webpack ts-loader webpack-node-externals
+  cache:
+    paths:
+      - node_modules
   script:
     - echo "---- Layer Install ----"
-    - node lib/process/setup.ts
+    - ts-node lib/process/setup.ts
     - echo "---- Build ----"
     - npm run build
 
@@ -35,8 +35,9 @@ Deploy:
   stage: deploy
   # only:
   #   - master
-  # before_script:
-  #   - npm i -g aws-cdk
+  cache:
+    paths:
+      - node_modules
   script:
     - echo "---- Deploy ----"
     - cdk deploy
