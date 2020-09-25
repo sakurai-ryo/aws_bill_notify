@@ -12,7 +12,7 @@ Test:
     - if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
       when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
   before_script:
-    - npm i -g jest ts-jest
+    - npm i
   script:
     - ls
     - echo "---- Unit Test ----"
