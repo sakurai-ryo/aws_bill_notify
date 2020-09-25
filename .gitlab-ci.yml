@@ -11,11 +11,8 @@ Test:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
       when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
-    # - if: "$VAR =~ /pattern/"
-    #   when: manual # ジョブを手動で実行
-    # - when: on_success # 直前のジョブが全て成功した場合にのみジョブが実行
-  # before_script:
-  #   - npm i -g jest ts-jest
+  before_script:
+    - npm i -g jest ts-jest
   script:
     - ls
     - echo "---- Unit Test ----"
