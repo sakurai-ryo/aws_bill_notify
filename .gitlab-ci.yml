@@ -8,9 +8,6 @@ stages:
 
 Test:
   stage: unitTest
-  cache:
-    paths:
-      - node_modules
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
       when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
@@ -24,46 +21,47 @@ Test:
     - echo "---- Unit Test ----"
     - npm run test # jest
 
-Build:
-  stage: build
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"' #'$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' masterへのcommitの場合 $CI_COMMIT_BRANCH
-      when: always
-    - if: "$VAR =~ /pattern/"
-      when: manual
-    - when: on_success
-  cache:
-    paths:
-      - node_modules
-  script:
-    - echo "---- Layer Install ----"
-    - npx ts-node lib/process/setup.ts
-    - echo "---- Build ----"
-    - npm run build
+# Build:
+#   stage: build
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "master"' #'$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' masterへのcommitの場合 $CI_COMMIT_BRANCH
+#       when: always
+#     - if: "$VAR =~ /pattern/"
+#       when: manual
+#     - when: on_success
+#   cache:
+#     paths:
+#       - bundle/nodejs/node_modules
+#   script:
+#     - echo "---- Layer Install ----"
+#     - npx ts-node lib/process/setup.ts
+#     - echo "---- Build ----"
+#     - npm run build
 
-DeployDev:
-  stage: deployDev
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: always
-    - if: "$VAR =~ /pattern/"
-      when: manual
-    - when: on_success
-  cache:
-    paths:
-      - node_modules
-  script:
-    - echo "---- Deploy ----"
-    - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
+# # TODO: credentialの取得
+# DeployDev:
+#   stage: deployDev
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "master"'
+#       when: always
+#     - if: "$VAR =~ /pattern/"
+#       when: manual
+#     - when: on_success
+#   cache:
+#     paths:
+#       - bundle/nodejs/node_modules
+#   script:
+#     - echo "---- Deploy ----"
+#     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
-DeployPro:
-  stage: deployPro
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: manual # 本番環境へのデプロイは手動実行にする
-  cache:
-    paths:
-      - node_modules
-  script:
-    - echo "---- Deploy ----"
-    - SYSTEM_ENV=pro npm run deploy
+# DeployPro:
+#   stage: deployPro
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "master"'
+#       when: manual # 本番環境へのデプロイは手動実行にする
+#   cache:
+#     paths:
+#       - bundle/nodejs/node_modules
+#   script:
+#     - echo "---- Deploy ----"
+#     - SYSTEM_ENV=pro npm run deploy
