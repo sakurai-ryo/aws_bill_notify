@@ -3,7 +3,8 @@ image: node:alpine
 stages:
   - unitTest
   - build
-  - deploy
+  - deployDev
+  - deployPro
 
 Test:
   stage: unitTest
@@ -20,8 +21,12 @@ Test:
 
 Build:
   stage: build
-  # only:
-  #   - master
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"' # masterにpushされている場合のみ
+      when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
+    - if: "$VAR =~ /pattern/"
+      when: manual # ジョブを手動で実行
+    - when: on_success # 直前のジョブが全て成功した場合にのみジョブが実行
   cache:
     paths:
       - node_modules
@@ -32,13 +37,29 @@ Build:
     - echo "---- Build ----"
     - npm run build
 
-Deploy:
+DeployDev:
   stage: deploy
-  # only:
-  #   - master
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: always
+    - if: "$VAR =~ /pattern/"
+      when: manual
+    - when: on_success
   cache:
     paths:
       - node_modules
   script:
     - echo "---- Deploy ----"
-    - cdk deploy
+    - cdk deploy SYSTEM_ENV=dev # 環境変数で環境を分岐させる
+
+DeployPro:
+  stage: deploy
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: manual # 本番環境へのデプロイは手動実行にする
+  cache:
+    paths:
+      - node_modules
+  script:
+    - echo "---- Deploy ----"
+    - cdk deploy SYSTEM_ENV=pro
