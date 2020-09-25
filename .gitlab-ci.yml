@@ -1,9 +1,9 @@
 # image: node:alpine
 
-# stages:
-#   - unitTest
-#   - build
-#   - deploy
+stages:
+  - unitTest
+  - build
+  - deploy
 
 # cache:
 #   paths:
