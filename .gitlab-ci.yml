@@ -1,5 +1,5 @@
-# image: node:alpine
-image: node:slim
+image: node:alpine
+# image: node:slim
 
 stages:
   - unitTest
