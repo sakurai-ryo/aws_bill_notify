@@ -2,6 +2,8 @@ import {
   expect as expectCDK,
   matchTemplate,
   MatchStyle,
+  SynthUtils,
+  haveResource,
 } from "@aws-cdk/assert";
 import * as cdk from "@aws-cdk/core";
 import * as BillNotifyToSlack from "../lib/bill_notify_to_slack-stack";
@@ -13,13 +15,19 @@ test("Empty Stack", () => {
     app,
     "MyTestStack"
   );
-  // THEN
+
   expectCDK(stack).to(
-    matchTemplate(
-      {
-        Resources: {},
-      },
-      MatchStyle.EXACT
-    )
+    haveResource("AWS::Lambda::Function", {
+      Handler: "index.handler",
+    })
   );
+  // THEN
+  // expectCDK(stack).to(
+  //   matchTemplate(
+  //     {
+  //       Resources: {},
+  //     },
+  //     MatchStyle.EXACT
+  //   )
+  // );
 });

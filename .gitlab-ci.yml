@@ -13,7 +13,7 @@ Test:
   stage: unitTest
   only: ["pushes"]
   before_script:
-    - npm i -g jest ts-jest webpack-node-externals
+    - npm i -g jest aws-cdk
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
@@ -22,7 +22,7 @@ Build:
   stage: build
   only: ["pushes"]
   before_script:
-    - npm i -g webpack ts-loader
+    - npm i -g webpack ts-loader webpack-node-externals
   script:
     - echo "---- Build ----"
     - npm run build
@@ -30,8 +30,8 @@ Build:
 Deploy:
   stage: deploy
   only: ["pushes"]
-  before_script:
-    - npm i -g aws-cdk
+  # before_script:
+  #   - npm i -g aws-cdk
   script:
     - echo "---- Deploy ----"
     - cdk deploy
