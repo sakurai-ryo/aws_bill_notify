@@ -27,6 +27,7 @@ Build:
       - node_modules
   script:
     - echo "---- Layer Install ----"
+    - npm i -g ts-node
     - ts-node lib/process/setup.ts
     - echo "---- Build ----"
     - npm run build
