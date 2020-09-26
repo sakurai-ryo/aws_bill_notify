@@ -18,6 +18,8 @@ Test:
     paths:
       - node_modules
   before_script:
+    - ls
+    - pwd
     - cd bundle/nodejs
     - ls
     - cd ../../
