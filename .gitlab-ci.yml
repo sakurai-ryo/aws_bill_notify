@@ -18,6 +18,7 @@ Test:
     paths:
       - node_modules
   before_script:
+    - ls
     - npm i --progress=false # テストに必要なモジュールのインストール
     - mkdir bundle bundle/nodejs dist dist/handler
     - ls
