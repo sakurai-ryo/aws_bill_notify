@@ -54,7 +54,6 @@ Build:
     - echo "---- Build ----"
     - npm run build
 
-# TODO: credentialの取得
 DeployDev:
   stage: deployDev
   rules:
