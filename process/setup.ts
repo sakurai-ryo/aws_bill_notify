@@ -29,19 +29,23 @@ const createLambdaLayer = () => {
   const layerDir = `${process.cwd()}/bundle`;
   const layerDirName = `${process.cwd()}/bundle/nodejs`;
 
-  if (existsSync(`${process.cwd()}/bundle`))
-    childProcess.execSync(`rm -r ${layerDir}`);
+  try {
+    if (existsSync(`${process.cwd()}/bundle`))
+      childProcess.execSync(`rm -r ${layerDir}`);
 
-  createDir(layerDir, layerDirName);
-  copyPackageJson(layerDirName);
+    createDir(layerDir, layerDirName);
+    copyPackageJson(layerDirName);
 
-  childProcess.execSync(
-    `npm --prefix ${layerDirName} install --production --progress=false`,
-    {
-      stdio: ["ignore", "inherit", "inherit"],
-      env: { ...process.env },
-      shell: "bash",
-    }
-  );
+    childProcess.execSync(
+      `npm --prefix ${layerDirName} install --production --progress=false`,
+      {
+        stdio: ["ignore", "inherit", "inherit"],
+        env: { ...process.env },
+        shell: "bash",
+      }
+    );
+  } catch (err) {
+    console.error("create Layer failed", err);
+  }
 };
 createLambdaLayer();

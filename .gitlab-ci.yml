@@ -45,6 +45,7 @@ Build:
   # before_script:
   #   - apk add bash
   script:
+    - ls
     - echo "---- Layer Install ----"
     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
     - echo "---- Build ----"
