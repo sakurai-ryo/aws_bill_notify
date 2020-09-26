@@ -35,7 +35,7 @@ Test:
         npm install --progress=false
       )
     # - npm i --progress=false # テストに必要なモジュールのインストール
-    - mkdir dist dist/handler bundle bundle/nodejs
+    - mkdir dist dist/handler # bundle bundle/nodejs
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
@@ -98,3 +98,9 @@ DeployPro:
   script:
     - echo "---- Deploy ----"
     - SYSTEM_ENV=pro npm run deploy
+# cleanup:
+#   stage: cleanup
+#   script:
+#     - rm -rf /home/gitlab/cache/xxx/yyy/${CI_COMMIT_REF_NAME}*
+#   rules:
+#     - when: always
