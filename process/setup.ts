@@ -44,4 +44,4 @@ const createLambdaLayer = () => {
     }
   );
 };
-createLambdaLayer();
+// createLambdaLayer();
