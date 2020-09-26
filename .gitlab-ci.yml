@@ -35,7 +35,7 @@ Build:
     #   when: on_success # testが通った時のみ実行する
   cache:
     paths:
-      - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
+      # - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
   # before_script:
   #   - apk add bash
@@ -55,7 +55,7 @@ DeployDev:
     #   when: on_success # test & buildが成功した時のみ
   cache:
     paths:
-      - bundle/nodejs/node_modules
+      # - bundle/nodejs/node_modules
       - node_modules
   script:
     - ls
@@ -69,7 +69,7 @@ DeployPro:
       when: manual # 本番環境へのデプロイは手動実行にする
   cache:
     paths:
-      - bundle/nodejs/node_modules
+      # - bundle/nodejs/node_modules
       - node_modules
   script:
     - echo "---- Deploy ----"
