@@ -1,6 +1,9 @@
 image: node:alpine
 # image: node:slim
 
+variables:
+  DEST_DIR: dest/
+
 stages:
   - unitTest
   - build
@@ -22,7 +25,16 @@ Test:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
     - ls
-    - npm i --progress=false # テストに必要なモジュールのインストール
+    - mkdir -p .cache
+    - npm config set cache $CI_PROJECT_DIR/.cache/npm --global
+    - >
+      (test -d node_modules/ && diff .cache/package.json package.json > /dev/null 2>&1) ||
+      (rm -fr node_modules/ &&
+        (test -f yarn.lock && yarn install) ||
+        (test -f package-lock.json && npm ci) ||
+        npm install --progress=false
+      )
+    # - npm i --progress=false # テストに必要なモジュールのインストール
     - mkdir dist dist/handler bundle bundle/nodejs
   script:
     - echo "---- Unit Test ----"
