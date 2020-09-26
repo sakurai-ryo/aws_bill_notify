@@ -53,7 +53,12 @@ Build:
         - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
-      - node_modules
+      # - node_modules
+  artifacts:
+    paths:
+      - dist/
+  # dependencies:
+  #   - Test
   # before_script:
   #   - apk add bash
   script:
@@ -71,13 +76,15 @@ DeployDev:
       when: on_success
     # - if: '$CI_COMMIT_BRANCH == "master"'
     #   when: on_success # test & buildが成功した時のみ
-  cache:
-    key:
-      files:
-        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
-    paths:
-      - bundle/nodejs/node_modules
-      - node_modules
+  # cache:
+  #   key:
+  #     files:
+  #       - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+  #   paths:
+  #     - bundle/nodejs/node_modules
+  #     - node_modules
+  dependencies:
+    - Build
   script:
     - ls
     - echo "---- Deploy ----"
@@ -88,13 +95,15 @@ DeployPro:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual # 本番環境へのデプロイは手動実行にする
-  cache:
-    key:
-      files:
-        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
-    paths:
-      - bundle/nodejs/node_modules
-      - node_modules
+  # cache:
+  #   key:
+  #     files:
+  #       - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+  #   paths:
+  #     - bundle/nodejs/node_modules
+  #     - node_modules
+  dependencies:
+    - Build
   script:
     - echo "---- Deploy ----"
     - SYSTEM_ENV=pro npm run deploy
