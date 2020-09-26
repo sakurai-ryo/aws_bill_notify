@@ -28,51 +28,60 @@ Test:
     - echo "---- Unit Test ----"
     - npm run test # jest
 
-# Build:
-#   stage: build
-#   rules:
-#     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-#       when: on_success
-#     # - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
-#     #   when: on_success # testが通った時のみ実行する
-#   cache:
-#     paths:
-#       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
-#       - node_modules
-#   # before_script:
-#   #   - apk add bash
-#   script:
-#     - echo "---- Layer Install ----"
-#     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
-#     - echo "---- Build ----"
-#     - npm run build
+Build:
+  stage: build
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: on_success
+    # - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
+    #   when: on_success # testが通った時のみ実行する
+  cache:
+    key:
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    paths:
+      - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
+      - node_modules
+  # before_script:
+  #   - apk add bash
+  script:
+    - echo "---- Layer Install ----"
+    - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
+    - echo "---- Build ----"
+    - npm run build
 
-# # TODO: credentialの取得
-# DeployDev:
-#   stage: deployDev
-#   rules:
-#     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-#       when: on_success
-#     # - if: '$CI_COMMIT_BRANCH == "master"'
-#     #   when: on_success # test & buildが成功した時のみ
-#   cache:
-#     paths:
-#       - bundle/nodejs/node_modules
-#       - node_modules
-#   script:
-#     - ls
-#     - echo "---- Deploy ----"
-#     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
+# TODO: credentialの取得
+DeployDev:
+  stage: deployDev
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: on_success
+    # - if: '$CI_COMMIT_BRANCH == "master"'
+    #   when: on_success # test & buildが成功した時のみ
+  cache:
+    key:
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    paths:
+      - bundle/nodejs/node_modules
+      - node_modules
+  script:
+    - ls
+    - echo "---- Deploy ----"
+    - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
-# DeployPro:
-#   stage: deployPro
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "master"'
-#       when: manual # 本番環境へのデプロイは手動実行にする
-#   cache:
-#     paths:
-#       - bundle/nodejs/node_modules
-#       - node_modules
-#   script:
-#     - echo "---- Deploy ----"
-#     - SYSTEM_ENV=pro npm run deploy
+DeployPro:
+  stage: deployPro
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: manual # 本番環境へのデプロイは手動実行にする
+  cache:
+    key:
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    paths:
+      - bundle/nodejs/node_modules
+      - node_modules
+  script:
+    - echo "---- Deploy ----"
+    - SYSTEM_ENV=pro npm run deploy
