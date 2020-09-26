@@ -17,16 +17,12 @@ Test:
   cache:
     paths:
       - node_modules
-  before_script:
-    - cd ~
-    - ls
-    - pwd # builds/sakurai-ryo/projectName
+  before_script: #pwd => builds/sakurai-ryo/projectName
     - cd bundle/nodejs
     - ls
     - cd ../../
     - npm i --progress=false # テストに必要なモジュールのインストール
     - mkdir bundle bundle/nodejs dist dist/handler
-    - ls
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
