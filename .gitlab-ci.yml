@@ -33,6 +33,9 @@ Test:
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
+  after_script:
+    - cd /home/gitlab-runner/cache
+    - ls
 
 Build:
   stage: build
@@ -51,7 +54,6 @@ Build:
     paths:
       - dist/
   script:
-    - docker ps | grep -cache-
     - ls
     - echo "---- Layer Install ----"
     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
@@ -68,7 +70,6 @@ DeployDev:
   dependencies:
     - Build
   script:
-    - docker ps | grep -cache-
     - ls
     - npm i -g aws-dk
     - echo "---- Deploy ----"
