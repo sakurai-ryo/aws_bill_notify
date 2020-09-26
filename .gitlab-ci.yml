@@ -18,9 +18,9 @@ Test:
     paths:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
-    - cd bundle/nodejs
-    - ls
-    - cd ../../
+    # - cd bundle/nodejs
+    # - ls
+    # - cd ../../
     - npm i --progress=false # テストに必要なモジュールのインストール
     - mkdir bundle bundle/nodejs dist dist/handler
   script:
