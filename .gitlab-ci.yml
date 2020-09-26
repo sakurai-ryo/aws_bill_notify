@@ -3,9 +3,9 @@ image: node:alpine
 
 stages:
   - unitTest
-  # - build
-  # - deployDev
-  # - deployPro
+  - build
+  - deployDev
+  - deployPro
 
 include: # 重複したパイプラインの作成を防ぐため
   - template: "Workflows/MergeRequest-Pipelines.gitlab-ci.yml"
