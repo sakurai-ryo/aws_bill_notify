@@ -33,9 +33,6 @@ Test:
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
-  after_script:
-    - cd /home/gitlab-runner/cache
-    - ls
 
 Build:
   stage: build
@@ -71,7 +68,7 @@ DeployDev:
     - Build
   script:
     - ls
-    - npm i -g aws-dk
+    - npm i -g aws-cdk
     - echo "---- Deploy ----"
     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
