@@ -26,7 +26,7 @@ Test:
   before_script: #pwd => builds/sakurai-ryo/projectName
     - ls
     - npm i --progress=false # テストに必要なモジュールのインストール
-    - mkdir dist dist/handler # bundle bundle/nodejs
+    - mkdir -p dist dist/handler bundle bundle/nodejs
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
@@ -44,7 +44,7 @@ Build:
         - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
-  artifacts:
+  artifacts: # webpackでbundleしたファイル次に引き継ぐ
     paths:
       - dist/
   script:
