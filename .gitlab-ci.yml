@@ -15,12 +15,15 @@ Test:
   rules: #if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
     - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
   cache:
+    key:
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新する
     paths:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
     - ls
     - npm i --progress=false # テストに必要なモジュールのインストール
-    - mkdir bundle bundle/nodejs dist dist/handler
+    - mkdir dist dist/handler # bundle bundle/nodejs
   script:
     - echo "---- Unit Test ----"
     - npm run test # jest
