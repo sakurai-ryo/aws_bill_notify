@@ -1,6 +1,9 @@
 image: node:alpine
 # image: node:slim
 
+# cache is stored in /home/gitlab-runner/cache
+# docker ps | grep -cache-
+
 variables:
   DEST_DIR: dest/
 
@@ -48,6 +51,7 @@ Build:
     paths:
       - dist/
   script:
+    - docker ps | grep -cache-
     - ls
     - echo "---- Layer Install ----"
     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
@@ -64,7 +68,9 @@ DeployDev:
   dependencies:
     - Build
   script:
+    - docker ps | grep -cache-
     - ls
+    - npm i -g aws-dk
     - echo "---- Deploy ----"
     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
