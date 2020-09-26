@@ -8,7 +8,7 @@ import {
 import * as cdk from "@aws-cdk/core";
 import * as BillNotifyToSlack from "../lib/bill_notify_to_slack-stack";
 
-test("Empty Stack", () => {
+test("has lambda handler", () => {
   const app = new cdk.App();
   // WHEN
   const stack = new BillNotifyToSlack.BillNotifyToSlackStack(
