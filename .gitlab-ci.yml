@@ -17,7 +17,7 @@ Test:
   cache:
     key:
       files:
-        - package.json # 依存関係が変更される度にキャッシュを更新する
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
