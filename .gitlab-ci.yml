@@ -14,13 +14,11 @@ Test:
   stage: unitTest
   rules: #if: '$CI_PIPELINE_SOURCE == "push"' # pushされた場合
     - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
-  # cache:
-  #   paths:
-  #     - node_modules
+  cache:
+    paths:
+      - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
-    # - cd bundle/nodejs
-    - ls -la
-    # - cd ../../
+    - ls
     - npm i --progress=false # テストに必要なモジュールのインストール
     - mkdir bundle bundle/nodejs dist dist/handler
   script:
