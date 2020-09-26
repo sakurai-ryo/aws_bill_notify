@@ -44,8 +44,12 @@ const createLambdaLayer = () => {
         shell: "bash",
       }
     );
+    // childProcess.execSync(
+    //   `npm --prefix ${layerDirName} install --production --progress=false`
+    // );
   } catch (err) {
     console.error("create Layer failed", err);
+    throw new Error(err);
   }
 };
 createLambdaLayer();
