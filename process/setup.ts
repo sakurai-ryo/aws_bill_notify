@@ -47,6 +47,7 @@ const createLambdaLayer = () => {
     childProcess.execSync(
       `npm --prefix ${layerDirName} install --production --progress=false`
     );
+    console.log("completed!");
   } catch (err) {
     console.error("create Layer failed", err);
     throw new Error(err);
