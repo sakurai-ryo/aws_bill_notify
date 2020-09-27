@@ -75,12 +75,19 @@ DeployDev:
       when: on_success
     # - if: '$CI_COMMIT_BRANCH == "master"'
     #   when: on_success # test & buildが成功した時のみ
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    # files:
+    #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    paths:
+      - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
+      - node_modules
   dependencies:
     - Build
   before_script:
     - ls
     - npm config set prefix /usr/local
-    - npm ci -g aws-cdk
+    - npm i -g aws-cdk
   script:
     - echo "---- Deploy ----"
     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
@@ -90,6 +97,13 @@ DeployPro:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual # 本番環境へのデプロイは手動実行にする
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    # files:
+    #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    paths:
+      - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
+      - node_modules
   dependencies:
     - Build
   script:
