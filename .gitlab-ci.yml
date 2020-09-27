@@ -1,11 +1,7 @@
 image: node:alpine
-# image: node:slim
 
-# cache is stored in /home/gitlab-runner/cache
-# docker ps | grep -cache-
-
-variables:
-  DEST_DIR: dest/
+# variables:
+#   DEST_DIR: dest/
 
 stages:
   - unitTest
@@ -22,8 +18,9 @@ Test:
     - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
   cache:
     key:
-      files:
-        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+      ${CI_COMMIT_REF_SLUG} # 同じブランチでは同じキャッシュを使用
+      # files:
+      #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
@@ -42,16 +39,17 @@ Build:
     # - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
     #   when: on_success # testが通った時のみ実行する
   cache:
-    key:
-      files:
-        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    key: ${CI_COMMIT_REF_SLUG}
+    # files:
+    #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
   artifacts: # webpackでbundleしたファイル次に引き継ぐ
     paths:
       - dist/
-  script:
+  before_script:
     - ls
+  script:
     - echo "---- Layer Install ----"
     - npx ts-node process/setup.ts # package.jsonのdependenciesのみをインストール
     - echo "---- Build ----"
@@ -66,9 +64,11 @@ DeployDev:
     #   when: on_success # test & buildが成功した時のみ
   dependencies:
     - Build
-  script:
+  before_script:
     - ls
+    - npm config set prefix /usr/local
     - npm i -g aws-cdk
+  script:
     - echo "---- Deploy ----"
     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
 
@@ -82,9 +82,3 @@ DeployPro:
   script:
     - echo "---- Deploy ----"
     - SYSTEM_ENV=pro npm run deploy
-# cleanup:
-#   stage: cleanup
-#   script:
-#     - rm -rf /home/gitlab/cache/xxx/yyy/${CI_COMMIT_REF_NAME}*
-#   rules:
-#     - when: always
