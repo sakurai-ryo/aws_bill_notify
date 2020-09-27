@@ -30,9 +30,8 @@ Test:
     - when: always # 直前のステージでジョブの状態がどうであるかにかかわらずジョブを実行
   cache:
     key:
-      ${CI_COMMIT_REF_SLUG} # 同じブランチでは同じキャッシュを使用
-      # files:
-      #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+      files:
+        - package.json
     paths:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
@@ -46,14 +45,14 @@ Test:
 Build:
   stage: build
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-      when: on_success
-    # - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
-    #   when: on_success # testが通った時のみ実行する
+    # - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+    #   when: on_success
+    - if: '$CI_COMMIT_BRANCH == "master"' # masterへのpushの場合
+      when: on_success # testが通った時のみ実行する
   cache:
     key: ${CI_COMMIT_REF_SLUG}
-    # files:
-    #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
@@ -71,14 +70,14 @@ Build:
 DeployDev:
   stage: deployDev
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
-      when: on_success
-    # - if: '$CI_COMMIT_BRANCH == "master"'
-    #   when: on_success # test & buildが成功した時のみ
+    # - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+    #   when: on_success
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success # test & buildが成功した時のみ
   cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    # files:
-    #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    key:
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
@@ -101,9 +100,9 @@ DeployPro:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual # 本番環境へのデプロイは手動実行にする
   cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    # files:
-    #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
+    key:
+      files:
+        - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
       - node_modules
