@@ -1,4 +1,5 @@
-image: node:alpine
+# image: node:alpine
+image: node:latest
 
 # variables:
 #   DEST_DIR: dest/
@@ -8,6 +9,17 @@ stages:
   - build
   - deployDev
   - deployPro
+
+# https://qiita.com/mstssk/items/8759c71f328cab802670
+# .~/npmをnpmはキャッシュ先のディレクトリとして使用するが、node_modulesをキャッシュした方が早そう
+# https://qiita.com/qrusadorz/items/937d97b177cb0140d1eb
+# cache: # https://gitlab-docs.creationline.com/ee/ci/caching/#caching-nodejs-dependencies
+#   key: ${CI_COMMIT_REF_SLUG}
+#   paths:
+#     - .npm/
+
+# before_script:
+#   - npm ci --cache .npm --prefer-offline
 
 include: # 重複したパイプラインの作成を防ぐため
   - template: "Workflows/MergeRequest-Pipelines.gitlab-ci.yml"
@@ -25,7 +37,7 @@ Test:
       - node_modules
   before_script: #pwd => builds/sakurai-ryo/projectName
     - ls
-    - npm i --progress=false # テストに必要なモジュールのインストール
+    - npm ci --progress=false # テストに必要なモジュールのインストール
     - mkdir -p dist dist/handler bundle bundle/nodejs
   script:
     - echo "---- Unit Test ----"
@@ -44,6 +56,7 @@ Build:
     #   - package.json # 依存関係が変更される度にキャッシュを更新するようにする
     paths:
       - bundle/nodejs/node_modules # layerに使用するnode_modulesをキャッシュ
+      - node_modules
   artifacts: # webpackでbundleしたファイル次に引き継ぐ
     paths:
       - dist/
@@ -67,7 +80,7 @@ DeployDev:
   before_script:
     - ls
     - npm config set prefix /usr/local
-    - npm i -g aws-cdk
+    - npm ci -g aws-cdk
   script:
     - echo "---- Deploy ----"
     - SYSTEM_ENV=dev npm run deploy # 環境変数で環境を分岐させる
