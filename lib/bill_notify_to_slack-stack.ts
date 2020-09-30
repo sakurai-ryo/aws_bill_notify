@@ -6,10 +6,11 @@ import {
   LayerVersion,
 } from "@aws-cdk/aws-lambda";
 import { Role, ServicePrincipal, ManagedPolicy } from "@aws-cdk/aws-iam";
-import { NODE_LAMBDA_LAYER_DIR } from "./process/setup";
 import { Rule, Schedule } from "@aws-cdk/aws-events";
 import { LambdaFunction } from "@aws-cdk/aws-events-targets";
 import { StringParameter } from "@aws-cdk/aws-ssm";
+
+const layerDirName = `${process.cwd()}/bundle/nodejs`;
 
 export class BillNotifyToSlackStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -45,7 +46,7 @@ export class BillNotifyToSlackStack extends cdk.Stack {
 
     // Layer version
     const nodeModulesLayer = new LayerVersion(this, "NodeModulesLayer", {
-      code: AssetCode.fromAsset(NODE_LAMBDA_LAYER_DIR),
+      code: AssetCode.fromAsset(layerDirName),
       compatibleRuntimes: [Runtime.NODEJS_12_X],
     });
 
@@ -53,7 +54,7 @@ export class BillNotifyToSlackStack extends cdk.Stack {
     const billNotifyLambda = new Function(this, "billNotifier", {
       functionName: "billNotifier",
       runtime: Runtime.NODEJS_12_X,
-      code: AssetCode.fromAsset("lambda"),
+      code: AssetCode.fromAsset("dist/handler"),
       layers: [nodeModulesLayer],
       handler: "index.handler",
       timeout: cdk.Duration.seconds(300),
