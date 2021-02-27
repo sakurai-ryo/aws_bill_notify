@@ -1,64 +1,11 @@
 import * as AWS from "aws-sdk";
 import { GetMetricDataInput } from "aws-sdk/clients/cloudwatch";
 import * as moment from "moment";
-import { IncomingWebhook } from "@slack/webhook";
+import { IncomingWebhook, IncomingWebhookSendArguments } from "@slack/webhook";
 
-interface Credential {
-  url: string;
-}
+const ce = new AWS.CostExplorer({ region: "us-east-1" });
 
-const createParam = (startTime: Date, endTime: Date, id: string) => {
-  const params: GetMetricDataInput = {
-    MetricDataQueries: [
-      {
-        Id: "id",
-        MetricStat: {
-          Metric: {
-            Namespace: "AWS/Billing",
-            MetricName: "EstimatedCharges",
-            Dimensions: [
-              {
-                Name: "Currency",
-                Value: "USD",
-              },
-            ],
-          },
-          Period: 86400,
-          Stat: "Maximum",
-        },
-      },
-    ],
-    StartTime: startTime,
-    EndTime: endTime,
-  };
-  return params;
-};
-
-const getMetricStatistics = async (
-  cw: AWS.CloudWatch,
-  params: GetMetricDataInput
-) => {
-  try {
-    const result = await cw.getMetricData(params).promise();
-    return result;
-  } catch (err) {
-    throw new Error(err);
-  }
-};
-
-/**
- * Secret Managerからsecretを取得
- */
-// export const getSecretString = async (): Promise<Credential> => {
-//   const secretManagerClient = new AWS.SecretsManager();
-//   const SECRET_ID = process.env.SECRET_ID!;
-//   const secretValue = await secretManagerClient
-//     .getSecretValue({ SecretId: SECRET_ID })
-//     .promise();
-//   return JSON.parse(secretValue.SecretString!);
-// };
-
-const sendToSlack = async (bill: number) => {
+const sendToSlack = async (start: string, end: string) => {
   //const credential = await getSecretString();
   const url = process.env.URL!;
   const webhook = new IncomingWebhook(url, {
@@ -68,40 +15,86 @@ const sendToSlack = async (bill: number) => {
 
   const today = moment().format("YYYY-MM-DD");
 
-  await webhook.send({
+  const monthBill = await getMonthTotal(start, end);
+  const serviceBill = await getBillingPerService(start, end);
+
+  const input: IncomingWebhookSendArguments = {
     text: `${today}時点の金額は下記の通りです。`,
     channel: "#aws-bill",
-    attachments: [{ text: `Total Cost: ${bill}$` }],
+    attachments: [{ text: `Total Cost: ${monthBill}$` }],
+  };
+
+  serviceBill.forEach((s) => {
+    if (s.bill === "0") return;
+    input.attachments!.push({
+      color: "#f0f8ff",
+      fields: [
+        {
+          title: s.name,
+          value: `${s.bill}$`,
+        },
+      ],
+    });
   });
+
+  await webhook.send(input);
+};
+
+const getMonthTotal = async (
+  start: string,
+  end: string
+): Promise<string | undefined> => {
+  const res = await ce
+    .getCostAndUsage({
+      TimePeriod: {
+        Start: start, //moment().startOf("month").format("YYYY-MM-DD"),
+        End: end, //moment().format("YYYY-MM-DD"),
+      },
+      Granularity: "MONTHLY",
+      Metrics: ["AmortizedCost"],
+    })
+    .promise();
+  return res.ResultsByTime![0].Total!.AmortizedCost.Amount;
+};
+
+const getBillingPerService = async (
+  start: string,
+  end: string
+): Promise<
+  {
+    name: string;
+    bill: string;
+  }[]
+> => {
+  const res = await ce
+    .getCostAndUsage({
+      TimePeriod: {
+        Start: start,
+        End: end,
+      },
+      Granularity: "MONTHLY",
+      Metrics: ["AmortizedCost"],
+      GroupBy: [
+        {
+          Type: "DIMENSION",
+          Key: "SERVICE",
+        },
+      ],
+    })
+    .promise();
+  return res.ResultsByTime![0].Groups!.map((r) => ({
+    name: r.Keys![0],
+    bill: r.Metrics!.AmortizedCost.Amount!,
+  }));
 };
 
 export const handler = async () => {
-  const cw = new AWS.CloudWatch({ region: "us-east-1" });
+  const start = moment().startOf("month").format("YYYY-MM-DD");
+  const end = moment().format("YYYY-MM-DD");
 
-  const today = moment(new Date()).utc().startOf("day");
-  const tomorrow = moment(today).add(1, "days");
-  const startDay = new Date(today.toISOString());
-  const endDay = new Date(tomorrow.toISOString());
-
-  // const startOfMonth = new Date(
-  //   moment(new Date()).startOf("month").toISOString()
-  // );
-
-  const dailyParams = createParam(startDay, endDay, "monitoringAwsCostPerDay");
-  // const monthlyParams = createParam(
-  //   startOfMonth,
-  //   new Date(today.toISOString()),
-  //   "monitoringAwsCostPerMonth"
-  // );
-
-  const dailyBill = await getMetricStatistics(cw, dailyParams);
-  console.log("handler -> dailyBill", JSON.stringify(dailyBill));
   try {
-    const bill = dailyBill.MetricDataResults![0].Values![0];
-    await sendToSlack(bill);
+    await sendToSlack(start, end);
   } catch (err) {
     throw new Error(err);
   }
-  // const monthlyBill = await getMetricStatistics(cw, monthlyParams);
-  // console.log("handler -> monthlyBill", JSON.stringify(monthlyBill));
 };

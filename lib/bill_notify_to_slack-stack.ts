@@ -5,7 +5,13 @@ import {
   Runtime,
   LayerVersion,
 } from "@aws-cdk/aws-lambda";
-import { Role, ServicePrincipal, ManagedPolicy } from "@aws-cdk/aws-iam";
+import {
+  Role,
+  ServicePrincipal,
+  ManagedPolicy,
+  PolicyStatement,
+  Policy,
+} from "@aws-cdk/aws-iam";
 import { NODE_LAMBDA_LAYER_DIR } from "./process/setup";
 import { Rule, Schedule } from "@aws-cdk/aws-events";
 import { LambdaFunction } from "@aws-cdk/aws-events-targets";
@@ -15,17 +21,19 @@ export class BillNotifyToSlackStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const statement = new PolicyStatement();
+    statement.addActions("ce:GetCostAndUsage");
+    statement.addResources("*");
+    const servicePolicy = new Policy(this, "ceRole", {
+      policyName: "ceRole",
+      statements: [statement],
+    });
     // IAM Role
     const executionLambdaRole = new Role(this, "secureLambdaRole", {
       roleName: "lambdaSecureExecutionRole",
       assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
-      managedPolicies: [
-        ManagedPolicy.fromAwsManagedPolicyName(
-          "service-role/AWSLambdaBasicExecutionRole"
-        ),
-        ManagedPolicy.fromAwsManagedPolicyName("CloudWatchFullAccess"),
-      ],
     });
+    executionLambdaRole.attachInlinePolicy(servicePolicy);
 
     //   aws ssm put-parameter \
     //  --type 'String' \
