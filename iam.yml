@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create IAM User and Role for deploy
+
+Parameters:
+  billNotifyStackName:
+    Type: String
+    Default: "Deploy-Iam-bill-notify-App"
+
+Resources:
+  # デプロイ用のIAMユーザ
+  DeployUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: "deploy-iam-user"
+
+  # デプロイ用のIAMユーザに付与するIAMポリシー（AssumeRoleできる）
+  DeployUserPoricy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "deploy-iam-user-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Resource: !GetAtt DeployRoleForUser.Arn
+      Users:
+        - !Ref DeployUser
+
+  # デプロイ用のIAMユーザがAssumeRoleするIAMロール（CloudFormationとS3に対する権限）
+  DeployRoleForUser:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "deploy-iam-deploy-role-for-user"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Principal:
+              AWS:
+                - !GetAtt DeployUser.Arn
+            Condition:
+              StringEquals:
+                sts:ExternalId: "any-id-hoge-fuga"
+      Policies:
+        - PolicyName: "deploy-iam-sample-deploy-policy-for-user"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "cloudformation:CreateStack"
+                  - "cloudformation:CreateChangeSet"
+                  - "cloudformation:DeleteChangeSet"
+                  - "cloudformation:DescribeChangeSet"
+                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:ExecuteChangeSet"
+                Resource:
+                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${billNotifyStackName}/*"
+              - Effect: "Allow"
+                Action:
+                  - "lambda:CreateFunction"
+                Resource:
+                  - "*"
+              - Effect: "Allow"
+                Action:
+                  - "iam:PassRole"
+                Resource:
+                  - !GetAtt DeployRoleForCloudFormation.Arn
+      MaxSessionDuration: 3600
+
+  # CloudFormation用のIAMロール（AWS各サービスに対する権限）
+  DeployRoleForCloudFormation:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "deploy-iam-sample-deploy-role-for-cloudformation"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Principal:
+              Service:
+                - "cloudformation.amazonaws.com"
+      # 実際にデプロイする際に必要な権限
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AWSLambdaFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+      MaxSessionDuration: 3600
+
+Outputs:
+  OutputDeployUser:
+    Description: "IAM User for Deploy"
+    Value: !GetAtt DeployUser.Arn
+
+  OutputDeployRoleForUser:
+    Description: "IAM Role (AssumeRole) for Deploy User"
+    Value: !GetAtt DeployRoleForUser.Arn
+
+  OutputDeployRoleForCloudFormation:
+    Description: "IAM Role (AssumeRole) for  Deploy CloudFormation"
+    Value: !GetAtt DeployRoleForCloudFormation.Arn
