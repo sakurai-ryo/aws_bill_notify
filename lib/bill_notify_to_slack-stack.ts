@@ -1,9 +1,17 @@
+import * as path from "node:path";
+
 import { Duration, Stack, type StackProps } from "aws-cdk-lib";
+import { Platform } from "aws-cdk-lib/aws-ecr-assets";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
-// biome-ignore lint/suspicious/noShadowRestrictedNames: Function is a CDK construct
-import { AssetImageCode, Function, Runtime } from "aws-cdk-lib/aws-lambda";
+import {
+  Architecture,
+  AssetImageCode,
+  // biome-ignore lint/suspicious/noShadowRestrictedNames: Function is a CDK construct
+  Function,
+  Runtime,
+} from "aws-cdk-lib/aws-lambda";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 
@@ -26,16 +34,24 @@ export class BillNotifyToSlackStack extends Stack {
       resources: ["*"],
     });
 
+    const lambdaImage = AssetImageCode.fromAssetImage(
+      path.join(__dirname, "../lambda"),
+      {
+        platform: Platform.LINUX_ARM64,
+      },
+    );
+
     const billNotifyLambda = new Function(this, "billNotifier", {
       functionName: "billNotifier",
       runtime: Runtime.FROM_IMAGE,
-      code: AssetImageCode.fromAssetImage(""),
-      handler: "index.handler",
+      architecture: Architecture.ARM_64,
+      memorySize: 512,
       timeout: Duration.seconds(300),
+      code: lambdaImage,
+      handler: "index.handler",
       initialPolicy: [costExplorerPolicy],
       environment: {
-        TZ: "Asia/Tokyo",
-        URL: slackWebhookUrlParameter.stringValue,
+        SLACK_WEBHOOK_URL: slackWebhookUrlParameter.stringValue,
       },
     });
 
