@@ -10,6 +10,7 @@ import {
   AssetImageCode,
   // biome-ignore lint/suspicious/noShadowRestrictedNames: Function is a CDK construct
   Function,
+  Handler,
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
@@ -35,7 +36,7 @@ export class BillNotifyToSlackStack extends Stack {
     });
 
     const lambdaImage = AssetImageCode.fromAssetImage(
-      path.join(__dirname, "../lambda"),
+      path.join(__dirname, "../bill_notify"),
       {
         platform: Platform.LINUX_ARM64,
       },
@@ -48,7 +49,7 @@ export class BillNotifyToSlackStack extends Stack {
       memorySize: 512,
       timeout: Duration.seconds(300),
       code: lambdaImage,
-      handler: "index.handler",
+      handler: Handler.FROM_IMAGE,
       initialPolicy: [costExplorerPolicy],
       environment: {
         SLACK_WEBHOOK_URL: slackWebhookUrlParameter.stringValue,

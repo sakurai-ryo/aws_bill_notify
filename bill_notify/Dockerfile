@@ -6,6 +6,9 @@ COPY Cargo.toml .
 COPY Cargo.lock .
 COPY src src
 
+RUN apt-get update && \
+  apt-get install -y pkg-config make g++ libssl-dev cmake libmariadb-dev-compat
+
 RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
@@ -13,7 +16,7 @@ RUN --mount=type=bind,source=src,target=src \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     cargo build --release
 
-RUN strip target/release/bill-notify -o main
+RUN strip target/release/bill_notify -o main
 
 FROM public.ecr.aws/lambda/provided:al2.2024.10.30.15
 

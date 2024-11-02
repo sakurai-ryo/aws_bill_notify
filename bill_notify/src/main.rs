@@ -45,10 +45,10 @@ async fn main() -> std::result::Result<(), Error> {
     Ok(())
 }
 
-async fn bill_notify(event: LambdaEvent<EventBridgeEvent>) -> std::result::Result<(), Error> {
+async fn bill_notify(_: LambdaEvent<EventBridgeEvent>) -> std::result::Result<(), Error> {
     let aws_config = aws_config::load_from_env().await;
     let ce_client = costexplorer::Client::new(&aws_config);
-    CE_CLIENT.set(ce_client);
+    let _ = CE_CLIENT.set(ce_client);
 
     let slack_webhook_url = match env::var(SLACK_WEBHOOK_URL_ENV_KEY) {
         Ok(val) => val,
