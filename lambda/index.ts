@@ -1,7 +1,10 @@
+import {
+  IncomingWebhook,
+  type IncomingWebhookSendArguments,
+} from "@slack/webhook";
 import * as AWS from "aws-sdk";
 import { GetMetricDataInput } from "aws-sdk/clients/cloudwatch";
 import * as moment from "moment";
-import { IncomingWebhook, IncomingWebhookSendArguments } from "@slack/webhook";
 
 const ce = new AWS.CostExplorer({ region: "us-east-1" });
 
@@ -42,7 +45,7 @@ const sendToSlack = async (start: string, end: string) => {
 
 const getMonthTotal = async (
   start: string,
-  end: string
+  end: string,
 ): Promise<string | undefined> => {
   const res = await ce
     .getCostAndUsage({
@@ -59,7 +62,7 @@ const getMonthTotal = async (
 
 const getBillingPerService = async (
   start: string,
-  end: string
+  end: string,
 ): Promise<
   {
     name: string;
