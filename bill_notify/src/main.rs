@@ -234,7 +234,6 @@ fn create_slack_payload(
 
 async fn send_slack(url: String, payload: &SlackWebhookPayload) -> Result<()> {
     let serialized_payload = serde_json::to_string(payload)?;
-    println!("{}", serialized_payload);
 
     let client = reqwest::Client::new();
     let res = client
