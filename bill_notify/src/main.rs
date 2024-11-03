@@ -23,6 +23,8 @@ struct BillPerService {
 #[derive(Serialize, Debug, Clone)]
 struct SlackText {
     r#type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    emoji: Option<bool>,
     text: String,
 }
 #[derive(Serialize, Debug, Clone)]
@@ -30,6 +32,8 @@ struct SlackBlock {
     r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<SlackText>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    fields: Option<Vec<SlackText>>,
 }
 #[derive(Serialize, Debug, Clone)]
 struct SlackWebhookPayload {
@@ -150,8 +154,8 @@ fn extract_bill_per_service(bill_group: &costexplorer::types::Group) -> BillPerS
         .unwrap();
 
     BillPerService {
-        name: name.to_string(),
-        bill: bill.to_string(),
+        name: name.into(),
+        bill: bill.into(),
     }
 }
 
@@ -161,17 +165,37 @@ fn create_slack_payload(
 ) -> SlackWebhookPayload {
     let tokyo_timezone = chrono_tz::Asia::Tokyo;
     let today = Utc::now().with_timezone(&tokyo_timezone);
-    let mut slack_blocks: Vec<SlackBlock> = vec![SlackBlock {
-        r#type: "section".to_string(),
-        text: Some(SlackText {
-            r#type: "mrkdwn".to_string(),
-            text: format!(
-                "{}時点の金額は下記の通りです。\nTotal Cost: ${}",
-                today.format("%Y-%m-%d %H:%M"),
-                month_total
-            ),
-        }),
-    }];
+    let mut slack_blocks: Vec<SlackBlock> = vec![
+        SlackBlock {
+            r#type: "header".into(),
+            text: Some(SlackText {
+                r#type: "plain_text".into(),
+                emoji: Some(true),
+                text: format!(
+                    "{}時点の金額は下記の通りです\n💰Total Cost: ${}",
+                    today.format("%Y-%m-%d %H:%M"),
+                    month_total
+                ),
+            }),
+            fields: None,
+        },
+        SlackBlock {
+            r#type: "section".into(),
+            text: None,
+            fields: Some(vec![
+                SlackText {
+                    r#type: "mrkdwn".into(),
+                    emoji: None,
+                    text: "Service".into(),
+                },
+                SlackText {
+                    r#type: "mrkdwn".into(),
+                    emoji: None,
+                    text: "Price".into(),
+                },
+            ]),
+        },
+    ];
     slack_blocks.extend(
         bill_per_services
             .iter()
@@ -181,13 +205,23 @@ fn create_slack_payload(
                     SlackBlock {
                         r#type: "divider".into(),
                         text: None,
+                        fields: None,
                     },
                     SlackBlock {
                         r#type: "section".into(),
-                        text: Some(SlackText {
-                            r#type: "mrkdwn".into(),
-                            text: format!("*{}*: ${}", service.name, service.bill),
-                        }),
+                        text: None,
+                        fields: Some(vec![
+                            SlackText {
+                                r#type: "mrkdwn".into(),
+                                emoji: None,
+                                text: format!("*{}*", service.name),
+                            },
+                            SlackText {
+                                r#type: "mrkdwn".into(),
+                                emoji: None,
+                                text: format!("${}", service.bill),
+                            },
+                        ]),
                     },
                 ]
             }),
