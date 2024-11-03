@@ -46,7 +46,7 @@ export class BillNotifyToSlackStack extends Stack {
       functionName: "billNotifier",
       runtime: Runtime.FROM_IMAGE,
       architecture: Architecture.ARM_64,
-      memorySize: 512,
+      memorySize: 1024,
       timeout: Duration.seconds(300),
       code: lambdaImage,
       handler: Handler.FROM_IMAGE,

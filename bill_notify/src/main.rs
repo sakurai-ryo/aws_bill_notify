@@ -21,21 +21,19 @@ struct BillPerService {
 }
 
 #[derive(Serialize, Debug, Clone)]
-struct SlackAttachmentField {
-    title: String,
-    value: String,
+struct SlackText {
+    r#type: String,
+    text: String,
 }
 #[derive(Serialize, Debug, Clone)]
-struct SlackAttachment {
-    color: Option<String>,
-    text: Option<String>,
-    fields: Option<Vec<SlackAttachmentField>>,
+struct SlackBlock {
+    r#type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<SlackText>,
 }
 #[derive(Serialize, Debug, Clone)]
 struct SlackWebhookPayload {
-    text: String,
-    channel: String,
-    attachments: Vec<SlackAttachment>,
+    blocks: Vec<SlackBlock>,
 }
 
 #[tokio::main]
@@ -63,34 +61,7 @@ async fn bill_notify(_: LambdaEvent<EventBridgeEvent>) -> std::result::Result<()
     let month_total = get_month_total(&CE_CLIENT, &start, &end).await?;
     let bill_per_services = get_bill_per_service(&CE_CLIENT, &start, &end).await?;
 
-    // TODO: use Block kit
-    let mut slack_attachment: Vec<SlackAttachment> = vec![SlackAttachment {
-        text: Some(format!("Total Cost: {}", month_total)),
-        color: None,
-        fields: None,
-    }];
-    slack_attachment.extend(
-        bill_per_services
-            .iter()
-            .map(|bill_per_service| SlackAttachment {
-                color: Some("#f0f8ff".to_string()),
-                text: None,
-                fields: Some(vec![SlackAttachmentField {
-                    title: bill_per_service.name.clone(),
-                    value: bill_per_service.bill.clone(),
-                }]),
-            }),
-    );
-    let tokyo_timezone = chrono_tz::Asia::Tokyo;
-    let today = Utc::now().with_timezone(&tokyo_timezone);
-    let slack_webhook_payload = SlackWebhookPayload {
-        text: format!(
-            "{}時点の金額は下記の通りです。",
-            today.format("%Y-%m-%d %H:%M")
-        ),
-        channel: "#aws-bill".to_string(),
-        attachments: slack_attachment,
-    };
+    let slack_webhook_payload = create_slack_payload(month_total, bill_per_services);
 
     send_slack(slack_webhook_url, &slack_webhook_payload).await?;
 
@@ -99,8 +70,8 @@ async fn bill_notify(_: LambdaEvent<EventBridgeEvent>) -> std::result::Result<()
 
 async fn get_month_total(
     client: &sync::OnceLock<Client>,
-    start: &String,
-    end: &String,
+    start: &str,
+    end: &str,
 ) -> Result<String> {
     let time_period = costexplorer::types::DateInterval::builder()
         .start(start)
@@ -133,8 +104,8 @@ async fn get_month_total(
 
 async fn get_bill_per_service(
     client: &sync::OnceLock<Client>,
-    start: &String,
-    end: &String,
+    start: &str,
+    end: &str,
 ) -> Result<Vec<BillPerService>> {
     let time_period = costexplorer::types::DateInterval::builder()
         .start(start)
@@ -184,8 +155,52 @@ fn extract_bill_per_service(bill_group: &costexplorer::types::Group) -> BillPerS
     }
 }
 
+fn create_slack_payload(
+    month_total: String,
+    bill_per_services: Vec<BillPerService>,
+) -> SlackWebhookPayload {
+    let tokyo_timezone = chrono_tz::Asia::Tokyo;
+    let today = Utc::now().with_timezone(&tokyo_timezone);
+    let mut slack_blocks: Vec<SlackBlock> = vec![SlackBlock {
+        r#type: "section".to_string(),
+        text: Some(SlackText {
+            r#type: "mrkdwn".to_string(),
+            text: format!(
+                "{}時点の金額は下記の通りです。\nTotal Cost: ${}",
+                today.format("%Y-%m-%d %H:%M"),
+                month_total
+            ),
+        }),
+    }];
+    slack_blocks.extend(
+        bill_per_services
+            .iter()
+            .filter(|service| service.bill != "0")
+            .flat_map(|service| {
+                vec![
+                    SlackBlock {
+                        r#type: "divider".into(),
+                        text: None,
+                    },
+                    SlackBlock {
+                        r#type: "section".into(),
+                        text: Some(SlackText {
+                            r#type: "mrkdwn".into(),
+                            text: format!("*{}*: ${}", service.name, service.bill),
+                        }),
+                    },
+                ]
+            }),
+    );
+
+    SlackWebhookPayload {
+        blocks: slack_blocks,
+    }
+}
+
 async fn send_slack(url: String, payload: &SlackWebhookPayload) -> Result<()> {
     let serialized_payload = serde_json::to_string(payload)?;
+    println!("{}", serialized_payload);
 
     let client = reqwest::Client::new();
     let res = client
