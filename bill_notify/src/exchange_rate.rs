@@ -15,8 +15,8 @@ pub async fn get_exchange_rate(client: &Client) -> Result<f64> {
     Ok(exchange_rate)
 }
 
-pub fn convert_usd_to_jpy(usd: &str, jpy_rate: f64) -> f64 {
+pub fn convert_usd_to_jpy(usd: &str, jpy_rate: f64) -> i64 {
     let jpy = usd.parse::<f64>().unwrap() * jpy_rate;
 
-    (jpy * 10000.0).round() / 10000.0
+    jpy.trunc() as i64
 }

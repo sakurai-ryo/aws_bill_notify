@@ -68,7 +68,9 @@ pub fn create_slack_payload(
     slack_blocks.extend(
         bill_per_services
             .iter()
-            .filter(|service| service.bill != "0")
+            .filter(|service| {
+                service.bill != "0" && service.bill.chars().take(6).collect::<String>() != "0.0000"
+            })
             .flat_map(|service| {
                 vec![
                     SlackBlock {
@@ -90,7 +92,7 @@ pub fn create_slack_payload(
                                 emoji: None,
                                 text: format!(
                                     "${} / ¥{}",
-                                    service.bill.chars().take(5).collect::<String>(),
+                                    service.bill.chars().take(6).collect::<String>(),
                                     convert_usd_to_jpy(service.bill.as_str(), jpy_rate)
                                 ),
                             },

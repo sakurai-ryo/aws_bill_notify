@@ -42,7 +42,7 @@ export class BillNotifyToSlackStack extends Stack {
       },
     );
 
-    const billNotifyLambda = new Function(this, "billNotifier", {
+    const billNotifyLambda = new Function(this, "BillNotifier", {
       functionName: "billNotifier",
       runtime: Runtime.FROM_IMAGE,
       architecture: Architecture.ARM_64,
