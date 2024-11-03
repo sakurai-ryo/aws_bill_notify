@@ -2,12 +2,12 @@ use std::{env, sync};
 
 use aws_lambda_events::eventbridge::EventBridgeEvent;
 use aws_sdk_costexplorer::{self as costexplorer, Client};
-use lambda_runtime::{service_fn, Error, LambdaEvent};
+use lambda_runtime::{service_fn, Diagnostic, LambdaEvent};
 
 use chrono::{Datelike, NaiveDate, Utc};
 
+use anyhow::Context as _;
 use anyhow::{anyhow, Result};
-use reqwest;
 use serde::Serialize;
 
 const SLACK_WEBHOOK_URL_ENV_KEY: &str = "SLACK_WEBHOOK_URL";
@@ -39,23 +39,19 @@ struct SlackWebhookPayload {
 }
 
 #[tokio::main]
-async fn main() -> std::result::Result<(), Error> {
+async fn main() -> std::result::Result<(), lambda_runtime::Error> {
     let func = service_fn(bill_notify);
     lambda_runtime::run(func).await?;
     Ok(())
 }
 
-async fn bill_notify(_: LambdaEvent<EventBridgeEvent>) -> std::result::Result<(), Error> {
+async fn bill_notify(_: LambdaEvent<EventBridgeEvent>) -> std::result::Result<(), Diagnostic> {
     let aws_config = aws_config::load_from_env().await;
     let ce_client = costexplorer::Client::new(&aws_config);
     let _ = CE_CLIENT.set(ce_client);
 
-    let slack_webhook_url = match env::var(SLACK_WEBHOOK_URL_ENV_KEY) {
-        Ok(val) => val,
-        Err(_) => {
-            return Err(Error::from("SLACK_WEBHOOK_URL not set"));
-        }
-    };
+    let slack_webhook_url =
+        env::var(SLACK_WEBHOOK_URL_ENV_KEY).context("SLACK_WEBHOOK_URL is not set")?;
 
     let utc_today = Utc::now();
     let start = NaiveDate::from_ymd_opt(utc_today.year(), utc_today.month(), 1)
@@ -73,18 +69,18 @@ async fn bill_notify(_: LambdaEvent<EventBridgeEvent>) -> std::result::Result<()
         color: None,
         fields: None,
     }];
-    let mut additional_slack_attachments: Vec<SlackAttachment> = bill_per_services
-        .iter()
-        .map(|bill_per_service| SlackAttachment {
-            color: Some("#f0f8ff".to_string()),
-            text: None,
-            fields: Some(vec![SlackAttachmentField {
-                title: bill_per_service.name.clone(),
-                value: bill_per_service.bill.clone(),
-            }]),
-        })
-        .collect();
-    slack_attachment.append(&mut additional_slack_attachments);
+    slack_attachment.extend(
+        bill_per_services
+            .iter()
+            .map(|bill_per_service| SlackAttachment {
+                color: Some("#f0f8ff".to_string()),
+                text: None,
+                fields: Some(vec![SlackAttachmentField {
+                    title: bill_per_service.name.clone(),
+                    value: bill_per_service.bill.clone(),
+                }]),
+            }),
+    );
     let tokyo_timezone = chrono_tz::Asia::Tokyo;
     let today = Utc::now().with_timezone(&tokyo_timezone);
     let slack_webhook_payload = SlackWebhookPayload {
@@ -113,7 +109,7 @@ async fn get_month_total(
 
     let result = client
         .get()
-        .ok_or_else(|| anyhow!("Client is not initialized"))?
+        .context("Client is not initialized")?
         .get_cost_and_usage()
         .time_period(time_period)
         .granularity(costexplorer::types::Granularity::Monthly)
@@ -123,14 +119,14 @@ async fn get_month_total(
 
     let amount = result
         .results_by_time()
-        .get(0)
-        .ok_or_else(|| anyhow!("ResultByTime is not found"))?
+        .first()
+        .context("ResultByTime is not found")?
         .total()
-        .ok_or_else(|| anyhow!("Total is not found"))?
+        .context("Total is not found")?
         .get("AmortizedCost")
-        .ok_or_else(|| anyhow!("AmortizedCost value is not found"))?
+        .context("AmortizedCost value is not found")?
         .amount()
-        .ok_or_else(|| anyhow!("Amount value is not found"))?;
+        .context("Amount value is not found")?;
 
     Ok(amount.to_string())
 }
@@ -151,7 +147,7 @@ async fn get_bill_per_service(
 
     let result = client
         .get()
-        .ok_or_else(|| anyhow!("Client is not initialized"))?
+        .context("Client is not initialized")?
         .get_cost_and_usage()
         .time_period(time_period)
         .granularity(costexplorer::types::Granularity::Monthly)
@@ -162,18 +158,18 @@ async fn get_bill_per_service(
 
     let bill_per_services = result
         .results_by_time()
-        .get(0)
-        .ok_or_else(|| anyhow!("ResultByTime is not found"))?
+        .first()
+        .context("ResultByTime is not found")?
         .groups()
         .iter()
-        .map(|bill| extract_bill_per_service(bill))
+        .map(extract_bill_per_service)
         .collect();
 
     Ok(bill_per_services)
 }
 
 fn extract_bill_per_service(bill_group: &costexplorer::types::Group) -> BillPerService {
-    let name = bill_group.keys().get(0).unwrap();
+    let name = bill_group.keys().first().unwrap();
     let bill = bill_group
         .metrics()
         .unwrap()
@@ -182,10 +178,10 @@ fn extract_bill_per_service(bill_group: &costexplorer::types::Group) -> BillPerS
         .amount()
         .unwrap();
 
-    return BillPerService {
+    BillPerService {
         name: name.to_string(),
         bill: bill.to_string(),
-    };
+    }
 }
 
 async fn send_slack(url: String, payload: &SlackWebhookPayload) -> Result<()> {
@@ -204,8 +200,7 @@ async fn send_slack(url: String, payload: &SlackWebhookPayload) -> Result<()> {
     println!("{:?}", res_body);
 
     match status {
-        reqwest::StatusCode::OK => Ok(()),
-        reqwest::StatusCode::CREATED => Ok(()),
+        reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => Ok(()),
         _ => Err(anyhow!("Failed to send slack message")),
     }
 }

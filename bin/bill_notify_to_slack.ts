@@ -7,7 +7,7 @@ const app = new cdk.App();
 
 new BillNotifyToSlackStack(app, "BillNotifyToSlackStack", {
   env: {
-    region: "ap-northeast-1",
-    account: "593359509969",
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
   },
 });

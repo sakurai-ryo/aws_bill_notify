@@ -2,12 +2,7 @@ FROM rust:1.82.0-slim as builder
 
 WORKDIR /app
 
-COPY Cargo.toml .
-COPY Cargo.lock .
-COPY src src
-
-RUN apt-get update && \
-  apt-get install -y pkg-config make g++ libssl-dev cmake libmariadb-dev-compat
+RUN apt-get update && apt-get upgrade && apt-get install -y pkg-config libssl-dev
 
 RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
@@ -18,7 +13,7 @@ RUN --mount=type=bind,source=src,target=src \
 
 RUN strip target/release/bill_notify -o main
 
-FROM public.ecr.aws/lambda/provided:al2.2024.10.30.15
+FROM public.ecr.aws/lambda/provided:al2023.2024.10.30.15
 
 WORKDIR /app
 

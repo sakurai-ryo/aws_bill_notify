@@ -4,5 +4,7 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "explicit"
   },
-  "rust-analyzer.linkedProjects": ["bill_notify/Cargo.toml"]
+  "rust-analyzer.linkedProjects": ["bill_notify/Cargo.toml"],
+  "rust-analyzer.checkOnSave": true,
+  "rust-analyzer.check.command": "clippy"
 }
