@@ -1,19 +1,25 @@
-FROM rust:1.82.0-slim as builder
+FROM rust:1.87.0-slim AS builder
 
-WORKDIR /app
+ARG APP_NAME=bill_notify
+ARG BUILDDIR=/app
+WORKDIR ${BUILDDIR}
 
-RUN apt-get update && apt-get upgrade && apt-get install -y pkg-config libssl-dev
+RUN apt -y update
+RUN apt -y upgrade
+RUN apt -y install pkg-config libssl-dev
 
 RUN --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
     --mount=type=cache,target=${BUILDDIR}/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
-    cargo build --release
+    <<EOF
+set -eu
+cargo build --locked --release
+cp ./target/release/${APP_NAME} /${BUILDDIR}/main
+EOF
 
-RUN strip target/release/bill_notify -o main
-
-FROM public.ecr.aws/lambda/provided:al2023.2024.10.30.15
+FROM public.ecr.aws/lambda/provided:al2023
 
 WORKDIR /app
 
