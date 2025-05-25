@@ -1,9 +1,7 @@
 import * as path from "node:path";
 
-import { Duration, Stack, type StackProps } from "aws-cdk-lib";
+import { Duration, Stack, type StackProps, TimeZone } from "aws-cdk-lib";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
-import { Rule, Schedule } from "aws-cdk-lib/aws-events";
-import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   Architecture,
@@ -13,6 +11,8 @@ import {
   Handler,
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
+import { Schedule, ScheduleExpression } from "aws-cdk-lib/aws-scheduler";
+import { LambdaInvoke } from "aws-cdk-lib/aws-scheduler-targets";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 
@@ -57,9 +57,16 @@ export class BillNotifyToSlackStack extends Stack {
     });
 
     // JSTで0時15分に起動するように設定
-    const rule = new Rule(this, "Rule", {
-      schedule: Schedule.expression("cron(15 15 * * ? *)"),
+    new Schedule(this, "Schedule", {
+      target: new LambdaInvoke(billNotifyLambda),
+      schedule: ScheduleExpression.cron({
+        minute: "15",
+        hour: "15",
+        day: "*",
+        month: "*",
+        year: "*",
+        timeZone: TimeZone.ASIA_TOKYO,
+      }),
     });
-    rule.addTarget(new LambdaFunction(billNotifyLambda));
   }
 }
