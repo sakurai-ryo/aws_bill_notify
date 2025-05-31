@@ -60,8 +60,8 @@ export class BillNotifyToSlackStack extends Stack {
     new Schedule(this, "Schedule", {
       target: new LambdaInvoke(billNotifyLambda),
       schedule: ScheduleExpression.cron({
-        minute: "15",
-        hour: "15",
+        hour: "0",
+        minute: "10",
         day: "*",
         month: "*",
         year: "*",
